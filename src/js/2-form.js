@@ -1,61 +1,37 @@
-const storageKey = '"feedback-form-state"'
-const message = document.querySelector('textarea');
-const form = document.querySelector('.feedback-form');
+// Описаний у документації
+import iziToast from 'izitoast';
+// Додатковий імпорт стилів
+import 'izitoast/dist/css/iziToast.min.css';
 
-form.addEventListener('input', formInput);
-form.addEventListener('submit', formSubmit)
+document.querySelector('.form').addEventListener('submit', function (event) {
+  event.preventDefault();
 
-function formInput() {
-    const emailInp = form.email.value;
-    const messageInp = form.message.value;
-    const data = {
-        email: emailInp.trim(),
-        message: messageInp.trim(),
+  const delayInput = document.querySelector('input[name="delay"]');
+  const stateRadio = document.querySelector('input[name="state"]:checked');
+
+  const delay = parseInt(delayInput.value, 10);
+
+  const notificationPromise = new Promise((resolve, reject) => {
+    if (stateRadio.value === 'fulfilled') {
+      setTimeout(() => resolve(delay), delay);
+    } else {
+      setTimeout(() => reject(delay), delay);
     }
-    addToLocalStorage(storageKey, data);
-}
+  });
 
-function addToLocalStorage(key, value) {
-    const zipValue = JSON.stringify(value);
-    localStorage.setItem(key, zipValue)
-}
-
-
-
-function formSubmit(event) {
-const emailInp = form.elements.email.value;
-const messageInp = form.elements.message.value;
-
-  if (emailInp === '' || messageInp === '') {
-    return
-  }
-    event.preventDefault();
-
-
-  const data = {
-    email: emailInp.trim(),
-    message: messageInp.trim(),
-  };
- 
-  console.log(data);
-form.reset();
-  localStorage.removeItem(storageKey);
-  
-}
-
-function loadFromLS(key) {
-  const zipValue = localStorage.getItem(key);
-  try {
-    return JSON.parse(zipValue);
-  } catch {
-    return zipValue;
-  }
-}
-
-function init() {
-  const data = loadFromLS(storageKey) || {};
-  form.elements.email.value = data.email || '';
-  form.elements.message.value = data.message || '';
-}
-
-init();
+  notificationPromise
+    .then(delay => {
+      iziToast.success({
+        title: 'OK',
+        message: `✅ Fulfilled promise in ${delay}ms`,
+        position: 'topRight',
+      });
+    })
+    .catch(delay => {
+      iziToast.error({
+        title: 'Error',
+        message: `❌ Rejected promise in ${delay}ms`,
+        position: 'topRight',
+      });
+    });
+});
